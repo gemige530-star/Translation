@@ -95,54 +95,57 @@
     <button id="translate-btn">翻译</button>
   </div>
 
-  <script>
-    const input = document.getElementById("input-text");
-    const outputContainer = document.getElementById("output-container");
-    const button = document.getElementById("translate-btn");
+ <script>
+  const input = document.getElementById("input-text");
+  const outputContainer = document.getElementById("output-container");
+  const button = document.getElementById("translate-btn");
 
-    async function translateText() {
-      const text = input.value.trim();
-      if (!text) return;
+  async function translateText() {
+    const text = input.value.trim();
+    if (!text) return;
 
-      const userBlock = document.createElement("div");
-      userBlock.className = "output";
-      userBlock.style.background = "#e8ecff";
-      userBlock.textContent = "🧑‍💻 " + text;
-      outputContainer.appendChild(userBlock);
+    const userBlock = document.createElement("div");
+    userBlock.className = "output";
+    userBlock.style.background = "#e8ecff";
+    userBlock.textContent = "🧑‍💻 " + text;
+    outputContainer.appendChild(userBlock);
 
-      input.value = "";
+    input.value = "";
+    outputContainer.scrollTop = outputContainer.scrollHeight;
+
+    try {
+      // ✅ 改成你自己的 Vercel 部署域名
+      const res = await fetch("https://translation-three.vercel.app/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+      const data = await res.json();
+      console.log(data);
+
+      const botBlock = document.createElement("div");
+      botBlock.className = "output";
+      botBlock.textContent = "🌐 " + (data.translation || "翻译失败，请稍后再试。");
+      outputContainer.appendChild(botBlock);
       outputContainer.scrollTop = outputContainer.scrollHeight;
-
-      try {
-        const res = await fetch("/api/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text })
-        });
-        const data = await res.json();
-
-        const botBlock = document.createElement("div");
-        botBlock.className = "output";
-        botBlock.textContent = "🌐 " + (data.translation || "翻译失败，请稍后再试。");
-        outputContainer.appendChild(botBlock);
-        outputContainer.scrollTop = outputContainer.scrollHeight;
-
-      } catch (err) {
-        const errorBlock = document.createElement("div");
-        errorBlock.className = "output";
-        errorBlock.style.background = "#ffe8e8";
-        errorBlock.textContent = "❌ 网络错误或服务器无响应。";
-        outputContainer.appendChild(errorBlock);
-      }
+    } catch (err) {
+      console.error(err);
+      const errorBlock = document.createElement("div");
+      errorBlock.className = "output";
+      errorBlock.style.background = "#ffe8e8";
+      errorBlock.textContent = "❌ 网络错误或服务器无响应。";
+      outputContainer.appendChild(errorBlock);
     }
+  }
 
-    button.addEventListener("click", translateText);
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        translateText();
-      }
-    });
-  </script>
+  button.addEventListener("click", translateText);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      translateText();
+    }
+  });
+</script>
 </body>
 </html>
