@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shirley的专属翻译器</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: #f5f5f7;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(90deg, #6b8df2, #9a79f7);
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .chat-box {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      position: sticky;
+      bottom: 0;
+      background-color: #fff;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      height: 80px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #6b8df2;
+      box-shadow: 0 0 0 2px rgba(107, 141, 242, 0.2);
+    }
+
+    button {
+      background: #6b8df2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #5578e6;
+    }
+
+    .output {
+      margin-bottom: 15px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      white-space: pre-wrap;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header>Shirley的专属翻译器</header>
+  <main id="output-container"></main>
+  <div class="chat-box">
+    <textarea id="input-text" placeholder="请输入要翻译的内容..."></textarea>
+    <button id="translate-btn">翻译</button>
+  </div>
+
+  <script>
+    const input = document.getElementById("input-text");
+    const outputContainer = document.getElementById("output-container");
+    const button = document.getElementById("translate-btn");
+
+    async function translateText() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const userBlock = document.createElement("div");
+      userBlock.className = "output";
+      userBlock.style.background = "#e8ecff";
+      userBlock.textContent = "🧑‍💻 " + text;
+      outputContainer.appendChild(userBlock);
+
+      input.value = "";
+      outputContainer.scrollTop = outputContainer.scrollHeight;
+
+      try {
+        const res = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+
+        const botBlock = document.createElement("div");
+        botBlock.className = "output";
+        botBlock.textContent = "🌐 " + (data.translation || "翻译失败，请稍后再试。");
+        outputContainer.appendChild(botBlock);
+        outputContainer.scrollTop = outputContainer.scrollHeight;
+
+      } catch (err) {
+        const errorBlock = document.createElement("div");
+        errorBlock.className = "output";
+        errorBlock.style.background = "#ffe8e8";
+        errorBlock.textContent = "❌ 网络错误或服务器无响应。";
+        outputContainer.appendChild(errorBlock);
+      }
+    }
+
+    button.addEventListener("click", translateText);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        translateText();
+      }
+    });
+  </script>
+</body>
+</html>
